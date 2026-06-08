@@ -1,0 +1,47 @@
+🎲 Jogo de Dado
+Um jogo de dado interativo feito com HTML, CSS e JavaScript puro — sem frameworks, sem dependências, sem instalação. Basta abrir o arquivo no navegador e jogar.
+---
+✨ Funcionalidades
+🎲 Modo 1 ou 2 dados — role um dado ou dois ao mesmo tempo com soma automática
+🏆 Placar de recordes — maior valor obtido, melhor sequência de rolagens altas e total de jogadas
+🔥 Streak tracker — acompanhe sua sequência de rolagens altas (5 ou 6)
+📊 Frequência por face — veja quantas vezes cada número saiu
+🕘 Histórico — últimas 12 rolagens sempre visíveis
+🔊 Efeitos sonoros — gerados via Web Audio API (sem arquivos externos)
+🌙 Tema claro / escuro — alternável com um clique
+⌨️ Acessível por teclado — `Enter` ou `Espaço` para rolar
+---
+🚀 Como usar
+Localmente
+```bash
+# Clone o repositório
+git clone https://github.com/seu-usuario/jogo-de-dado.git
+
+# Abra o arquivo no navegador
+open dado.html
+```
+Ou simplesmente baixe o `dado.html` e abra direto no navegador — nenhuma instalação necessária.
+GitHub Pages
+Vá em Settings → Pages
+Em Source, selecione a branch `main` e a pasta `/ (root)`
+Salve — o jogo estará disponível em:
+```
+https://seu-usuario.github.io/jogo-de-dado
+```
+---
+🗂️ Estrutura do projeto
+```
+jogo-de-dado/
+└── dado.html   # Tudo em um único arquivo
+```
+---
+🛠️ Tecnologias
+Tecnologia	Uso
+HTML5	Estrutura e SVG dos dados
+CSS3	Layout, animações e tema claro/escuro
+JavaScript (ES6+)	Lógica do jogo e Web Audio API
+---
+📄 Licença
+Este projeto está sob a licença MIT.
+---
+Feito com ❤️ e um pouco de sorte 🎲
