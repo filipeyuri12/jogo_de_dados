@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Jogo de Dado</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-page: #f5f4f0;
+      --bg-card: #ffffff;
+      --bg-secondary: #f5f4f0;
+      --border: #d0cfc9;
+      --border-mid: #b4b2a9;
+      --text-primary: #2c2c2a;
+      --text-secondary: #888780;
+      --shadow: rgba(0,0,0,0.08);
+      --shadow-strong: rgba(0,0,0,0.13);
+    }
+
+    [data-theme="dark"] {
+      --bg-page: #1a1a18;
+      --bg-card: #252523;
+      --bg-secondary: #2e2e2b;
+      --border: #3a3a37;
+      --border-mid: #4a4a46;
+      --text-primary: #e8e7e3;
+      --text-secondary: #888780;
+      --shadow: rgba(0,0,0,0.3);
+      --shadow-strong: rgba(0,0,0,0.5);
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg-page);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-primary);
+      transition: background 0.3s, color 0.3s;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.25rem;
+      padding: 2rem 1.75rem;
+      background: var(--bg-card);
+      border-radius: 20px;
+      border: 0.5px solid var(--border);
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 2px 24px var(--shadow);
+      transition: background 0.3s, border-color 0.3s;
+      position: relative;
+    }
+
+    /* Header */
+    .header {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    h1 { font-size: 17px; font-weight: 500; }
+
+    .header-btns { display: flex; gap: 8px; }
+
+    .icon-btn {
+      background: none;
+      border: 0.5px solid var(--border-mid);
+      border-radius: 8px;
+      width: 32px;
+      height: 32px;
+      cursor: pointer;
+      font-size: 15px;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s;
+      color: var(--text-primary);
+    }
+    .icon-btn:hover { background: var(--bg-secondary); }
+    .icon-btn.active { background: var(--bg-secondary); border-color: var(--text-secondary); }
+
+    /* Modo tabs */
+    .modo-tabs {
+      display: flex;
+      gap: 6px;
+      background: var(--bg-secondary);
+      border-radius: 10px;
+      padding: 4px;
+      width: 100%;
+    }
+    .modo-tab {
+      flex: 1;
+      padding: 6px;
+      border: none;
+      border-radius: 7px;
+      background: none;
+      cursor: pointer;
+      font-size: 13px;
+      font-family: inherit;
+      color: var(--text-secondary);
+      transition: all 0.2s;
+    }
+    .modo-tab.ativo {
+      background: var(--bg-card);
+      color: var(--text-primary);
+      font-weight: 500;
+      box-shadow: 0 1px 4px var(--shadow);
+    }
+
+    /* Resultado */
+    .resultado {
+      font-size: 19px;
+      font-weight: 500;
+      min-height: 30px;
+      text-align: center;
+      color: var(--text-primary);
+      transition: opacity 0.2s;
+    }
+    .soma-badge {
+      display: inline-block;
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-left: 6px;
+      font-weight: 400;
+    }
+
+    /* Dados */
+    .dados-area {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .dado {
+      cursor: pointer;
+      transition: transform 0.1s;
+      filter: drop-shadow(0 4px 14px var(--shadow-strong));
+    }
+    .dado:hover { transform: scale(1.05); }
+    .dado:active { transform: scale(0.93); }
+    .dado.rolando { animation: shake 0.55s ease-in-out; }
+
+    @keyframes shake {
+      0%   { transform: rotate(0deg) scale(1); }
+      15%  { transform: rotate(-18deg) scale(1.08); }
+      30%  { transform: rotate(20deg) scale(1.05); }
+      45%  { transform: rotate(-14deg) scale(1.1); }
+      60%  { transform: rotate(12deg) scale(1.06); }
+      75%  { transform: rotate(-8deg) scale(1.04); }
+      90%  { transform: rotate(5deg) scale(1.02); }
+      100% { transform: rotate(0deg) scale(1); }
+    }
+
+    .instrucao { font-size: 13px; color: var(--text-secondary); }
+
+    /* Recordes */
+    .recordes-bar {
+      width: 100%;
+      display: flex;
+      gap: 8px;
+    }
+    .recorde-card {
+      flex: 1;
+      background: var(--bg-secondary);
+      border-radius: 10px;
+      padding: 8px 6px;
+      text-align: center;
+    }
+    .recorde-num {
+      display: block;
+      font-size: 18px;
+      font-weight: 500;
+    }
+    .recorde-label {
+      display: block;
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
+
+    /* Histórico */
+    .secao-titulo {
+      font-size: 12px;
+      color: var(--text-secondary);
+      text-align: center;
+    }
+    .historico {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      justify-content: center;
+      max-width: 340px;
+    }
+    .hist-item {
+      width: 30px; height: 30px;
+      border-radius: 8px;
+      border: 0.5px solid var(--border);
+      background: var(--bg-secondary);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 500;
+      transition: background 0.2s;
+    }
+
+    /* Stats */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 6px;
+      width: 100%;
+    }
+    .stat-card {
+      background: var(--bg-secondary);
+      border-radius: 8px;
+      padding: 6px 4px;
+      text-align: center;
+    }
+    .stat-num { display: block; font-size: 14px; font-weight: 500; }
+    .stat-label { display: block; font-size: 11px; color: var(--text-secondary); }
+
+    /* Botões */
+    .btn-reset {
+      font-size: 13px;
+      color: var(--text-secondary);
+      background: none;
+      border: 0.5px solid var(--border-mid);
+      border-radius: 8px;
+      padding: 6px 18px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.15s;
+    }
+    .btn-reset:hover { background: var(--bg-secondary); }
+
+    /* Utils */
+    .oculto { display: none !important; }
+    .flex-col { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 100%; }
+    .divider { width: 100%; height: 0.5px; background: var(--border); }
+
+    /* Streak */
+    .streak {
+      font-size: 13px;
+      color: var(--text-secondary);
+      text-align: center;
+    }
+    .streak span { font-weight: 500; color: var(--text-primary); }
+  </style>
+</head>
+<body>
+
+<div class="container" id="container">
+
+  <!-- Header -->
+  <div class="header">
+    <h1>🎲 Jogo de Dado</h1>
+    <div class="header-btns">
+      <button class="icon-btn" id="btn-som" title="Som" onclick="toggleSom()">🔊</button>
+      <button class="icon-btn" id="btn-tema" title="Tema" onclick="toggleTema()">🌙</button>
+    </div>
+  </div>
+
+  <!-- Modo -->
+  <div class="modo-tabs">
+    <button class="modo-tab ativo" id="tab1" onclick="setModo(1)">1 Dado</button>
+    <button class="modo-tab" id="tab2" onclick="setModo(2)">2 Dados</button>
+  </div>
+
+  <!-- Resultado -->
+  <div class="resultado" id="resultado">Clique no dado para rolar!</div>
+
+  <!-- Dados SVG -->
+  <div class="dados-area" id="dados-area">
+    <svg width="120" height="120" viewBox="0 0 120 120" class="dado" id="dado1"
+         onclick="rolar()" role="button" aria-label="Rolar dado" tabindex="0">
+      <rect id="bg1" x="4" y="4" width="112" height="112" rx="18" fill="#ffffff" stroke="#d0cfc9" stroke-width="1"/>
+      <g id="pts1"></g>
+    </svg>
+    <svg width="110" height="110" viewBox="0 0 120 120" class="dado oculto" id="dado2"
+         onclick="rolar()" role="button" aria-label="Dado 2" tabindex="0">
+      <rect id="bg2" x="4" y="4" width="112" height="112" rx="18" fill="#ffffff" stroke="#d0cfc9" stroke-width="1"/>
+      <g id="pts2"></g>
+    </svg>
+  </div>
+
+  <p class="instrucao">Clique no dado para rolar</p>
+
+  <!-- Recordes -->
+  <div class="flex-col oculto" id="recordes-wrap">
+    <div class="divider"></div>
+    <div class="recordes-bar">
+      <div class="recorde-card">
+        <span class="recorde-num" id="rec-maior" style="color:#0f6e56">—</span>
+        <span class="recorde-label">maior valor</span>
+      </div>
+      <div class="recorde-card">
+        <span class="recorde-num" id="rec-streak" style="color:#534ab7">—</span>
+        <span class="recorde-label">melhor streak</span>
+      </div>
+      <div class="recorde-card">
+        <span class="recorde-num" id="rec-total" style="color:#185fa5">—</span>
+        <span class="recorde-label">rolagens</span>
+      </div>
+    </div>
+    <div class="streak" id="streak-info"></div>
+  </div>
+
+  <!-- Histórico -->
+  <div class="flex-col oculto" id="hist-wrap">
+    <div class="divider"></div>
+    <p class="secao-titulo">Últimas rolagens</p>
+    <div class="historico" id="historico"></div>
+  </div>
+
+  <!-- Stats -->
+  <div class="flex-col oculto" id="stats-wrap">
+    <div class="divider"></div>
+    <p class="secao-titulo">Frequência por face</p>
+    <div class="stats" id="stats"></div>
+  </div>
+
+  <button class="btn-reset oculto" id="btn-reset" onclick="resetar()">Reiniciar</button>
+</div>
+
+<script>
+  /* ── Dados ── */
+  const FACES = {
+    1:[[60,60]],
+    2:[[38,38],[82,82]],
+    3:[[38,38],[60,60],[82,82]],
+    4:[[38,38],[82,38],[38,82],[82,82]],
+    5:[[38,38],[82,38],[60,60],[38,82],[82,82]],
+    6:[[38,34],[82,34],[38,60],[82,60],[38,86],[82,86]]
+  };
+  const CORES = {
+    1:{bg:'#ffffff',bgD:'#2e2e2b',stroke:'#d0cfc9',strokeD:'#3a3a37',dot:'#2c2c2a',dotD:'#e8e7e3'},
+    2:{bg:'#f0f7ff',bgD:'#1a2535',stroke:'#b5d4f4',strokeD:'#2a4a6e',dot:'#185fa5',dotD:'#85b7eb'},
+    3:{bg:'#f0faf6',bgD:'#182820',stroke:'#9fe1cb',strokeD:'#1d6e50',dot:'#0f6e56',dotD:'#5dcaa5'},
+    4:{bg:'#fff8f0',bgD:'#2a2010',stroke:'#fac775',strokeD:'#7a5520',dot:'#854f0b',dotD:'#ef9f27'},
+    5:{bg:'#fdf0f0',bgD:'#2a1515',stroke:'#f7c1c1',strokeD:'#6e2020',dot:'#a32d2d',dotD:'#f09595'},
+    6:{bg:'#f4f0fe',bgD:'#1e1a30',stroke:'#cecbf6',strokeD:'#4a4080',dot:'#534ab7',dotD:'#afa9ec'}
+  };
+  const MSGS1 = {
+    1:'Só 1... tente a sorte!',2:'Saiu 2.',3:'Saiu 3.',
+    4:'Saiu 4!',5:'Saiu 5! Quase no máximo!',6:'6! Máximo! 🎉'
+  };
+
+  let modo = 1;
+  let tema = 'light';
+  let somAtivo = true;
+  let rolando = false;
+  let historico = [];
+  let freq = {1:0,2:0,3:0,4:0,5:0,6:0};
+  let totalRolagens = 0;
+  let maiorValor = 0;
+  let streakAtual = 0;
+  let melhorStreak = 0;
+  let ultimoAlto = false; // 5 ou 6 = alto
+
+  /* ── Áudio Web API ── */
+  let ctx = null;
+  function getCtx() {
+    if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+    return ctx;
+  }
+
+  function beep(freq, dur, type='sine', vol=0.15, delay=0) {
+    if (!somAtivo) return;
+    try {
+      const c = getCtx();
+      const o = c.createOscillator();
+      const g = c.createGain();
+      o.connect(g); g.connect(c.destination);
+      o.type = type; o.frequency.value = freq;
+      g.gain.setValueAtTime(vol, c.currentTime + delay);
+      g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + delay + dur);
+      o.start(c.currentTime + delay);
+      o.stop(c.currentTime + delay + dur + 0.01);
+    } catch(e){}
+  }
+
+  function somRolagem() {
+    // cliques rápidos simulando dado rolando
+    for (let i = 0; i < 6; i++) {
+      beep(180 + Math.random()*80, 0.04, 'sawtooth', 0.08, i*0.07);
+    }
+  }
+
+  function somResultado(n) {
+    if (n === 6) {
+      beep(523, 0.12, 'sine', 0.2);
+      beep(659, 0.12, 'sine', 0.15, 0.13);
+      beep(784, 0.2, 'sine', 0.18, 0.26);
+    } else if (n >= 4) {
+      beep(440, 0.1, 'sine', 0.15);
+      beep(550, 0.15, 'sine', 0.12, 0.12);
+    } else if (n === 1) {
+      beep(220, 0.2, 'sine', 0.12);
+    } else {
+      beep(350, 0.1, 'sine', 0.12);
+    }
+  }
+
+  /* ── Desenho ── */
+  function desenharFace(n, bgId, ptsId) {
+    const esc = tema === 'dark';
+    const bg  = document.getElementById(bgId);
+    const g   = document.getElementById(ptsId);
+    const cor = CORES[n];
+    bg.setAttribute('fill',   esc ? cor.bgD   : cor.bg);
+    bg.setAttribute('stroke', esc ? cor.strokeD : cor.stroke);
+    g.innerHTML = '';
+    FACES[n].forEach(([cx,cy]) => {
+      const c = document.createElementNS('http://www.w3.org/2000/svg','circle');
+      c.setAttribute('cx',cx); c.setAttribute('cy',cy); c.setAttribute('r',8);
+      c.setAttribute('fill', esc ? cor.dotD : cor.dot);
+      g.appendChild(c);
+    });
+  }
+
+  function redesenharAtual() {
+    if (historico.length === 0) return;
+    const ultimo = historico[0];
+    if (Array.isArray(ultimo)) {
+      desenharFace(ultimo[0],'bg1','pts1');
+      desenharFace(ultimo[1],'bg2','pts2');
+    } else {
+      desenharFace(ultimo,'bg1','pts1');
+    }
+  }
+
+  /* ── Rolar ── */
+  function rolar() {
+    if (rolando) return;
+    rolando = true;
+    somRolagem();
+    const d1 = document.getElementById('dado1');
+    const d2 = document.getElementById('dado2');
+    d1.classList.add('rolando');
+    if (modo === 2) d2.classList.add('rolando');
+    document.getElementById('resultado').style.opacity = '0.3';
+
+    let flips = 0;
+    const total = 9;
+    const iv = setInterval(() => {
+      desenharFace(Math.ceil(Math.random()*6),'bg1','pts1');
+      if (modo === 2) desenharFace(Math.ceil(Math.random()*6),'bg2','pts2');
+      flips++;
+      if (flips >= total) {
+        clearInterval(iv);
+        const f1 = Math.ceil(Math.random()*6);
+        const f2 = modo === 2 ? Math.ceil(Math.random()*6) : null;
+        desenharFace(f1,'bg1','pts1');
+        if (modo === 2) desenharFace(f2,'bg2','pts2');
+        finalizarRolagem(f1, f2);
+        d1.classList.remove('rolando');
+        if (modo === 2) d2.classList.remove('rolando');
+        rolando = false;
+      }
+    }, 60);
+  }
+
+  function finalizarRolagem(f1, f2) {
+    totalRolagens++;
+    freq[f1]++;
+    if (f2) freq[f2]++;
+
+    const val = f2 ? f1 + f2 : f1;
+    if (val > maiorValor) maiorValor = val;
+
+    // streak: considera "alto" = 5 ou 6 (modo 1) ou soma >= 9 (modo 2)
+    const alto = f2 ? val >= 9 : f1 >= 5;
+    if (alto) { streakAtual++; if (streakAtual > melhorStreak) melhorStreak = streakAtual; }
+    else streakAtual = 0;
+
+    if (f2) historico.unshift([f1, f2]);
+    else historico.unshift(f1);
+    if (historico.length > 12) historico.pop();
+
+    // mensagem
+    let msg = '';
+    if (f2) {
+      if (val === 12) msg = `${f1} + ${f2} = 12! Máximo! 🎉`;
+      else if (val === 2) msg = `${f1} + ${f2} = 2... Azar total!`;
+      else msg = `${f1} + ${f2} = ${val}`;
+    } else {
+      msg = MSGS1[f1];
+    }
+    const res = document.getElementById('resultado');
+    res.textContent = msg;
+    res.style.opacity = '1';
+
+    somResultado(f2 ? Math.round(val/2) : f1);
+
+    atualizarTudo();
+    mostrarPaineis();
+  }
+
+  function atualizarTudo() {
+    // recordes
+    document.getElementById('rec-maior').textContent  = maiorValor || '—';
+    document.getElementById('rec-streak').textContent = melhorStreak || '—';
+    document.getElementById('rec-total').textContent  = totalRolagens;
+
+    // streak info
+    const si = document.getElementById('streak-info');
+    if (streakAtual > 1) si.innerHTML = `🔥 Sequência atual: <span>${streakAtual}</span> rolagens altas!`;
+    else si.textContent = '';
+
+    // histórico
+    const hEl = document.getElementById('historico');
+    hEl.innerHTML = '';
+    historico.forEach(item => {
+      if (Array.isArray(item)) {
+        const w = document.createElement('div');
+        w.style.cssText='display:flex;gap:4px;align-items:center';
+        [item[0],item[1]].forEach(n => {
+          const d = document.createElement('div');
+          d.className='hist-item';
+          d.textContent = n;
+          d.style.color = tema==='dark' ? CORES[n].dotD : CORES[n].dot;
+          d.style.borderColor = tema==='dark' ? CORES[n].strokeD : CORES[n].stroke;
+          w.appendChild(d);
+        });
+        hEl.appendChild(w);
+      } else {
+        const d = document.createElement('div');
+        d.className='hist-item';
+        d.textContent = item;
+        d.style.color = tema==='dark' ? CORES[item].dotD : CORES[item].dot;
+        d.style.borderColor = tema==='dark' ? CORES[item].strokeD : CORES[item].stroke;
+        hEl.appendChild(d);
+      }
+    });
+
+    // stats
+    const sEl = document.getElementById('stats');
+    sEl.innerHTML='';
+    for(let i=1;i<=6;i++){
+      const d=document.createElement('div');
+      d.className='stat-card';
+      d.innerHTML=`<span class="stat-num" style="color:${tema==='dark'?CORES[i].dotD:CORES[i].dot}">${freq[i]}</span><span class="stat-label">${i}</span>`;
+      sEl.appendChild(d);
+    }
+  }
+
+  function mostrarPaineis() {
+    ['recordes-wrap','hist-wrap','stats-wrap','btn-reset'].forEach(id=>{
+      document.getElementById(id).classList.remove('oculto');
+    });
+  }
+
+  /* ── Modo ── */
+  function setModo(m) {
+    modo = m;
+    document.getElementById('tab1').classList.toggle('ativo', m===1);
+    document.getElementById('tab2').classList.toggle('ativo', m===2);
+    document.getElementById('dado2').classList.toggle('oculto', m===1);
+    resetar();
+  }
+
+  /* ── Tema ── */
+  function toggleTema() {
+    tema = tema==='light' ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', tema==='dark'?'dark':'');
+    document.getElementById('btn-tema').textContent = tema==='dark' ? '☀️' : '🌙';
+    redesenharAtual();
+  }
+
+  /* ── Som ── */
+  function toggleSom() {
+    somAtivo = !somAtivo;
+    document.getElementById('btn-som').textContent = somAtivo ? '🔊' : '🔇';
+    document.getElementById('btn-som').classList.toggle('active', !somAtivo);
+  }
+
+  /* ── Reset ── */
+  function resetar() {
+    historico=[]; freq={1:0,2:0,3:0,4:0,5:0,6:0};
+    totalRolagens=0; maiorValor=0; streakAtual=0; melhorStreak=0;
+    document.getElementById('resultado').textContent='Clique no dado para rolar!';
+    document.getElementById('resultado').style.opacity='1';
+    ['recordes-wrap','hist-wrap','stats-wrap','btn-reset'].forEach(id=>{
+      document.getElementById(id).classList.add('oculto');
+    });
+    const esc = tema==='dark';
+    ['bg1','bg2'].forEach(id=>{
+      const el=document.getElementById(id);
+      el.setAttribute('fill',esc?'#2e2e2b':'#ffffff');
+      el.setAttribute('stroke',esc?'#3a3a37':'#d0cfc9');
+    });
+    document.getElementById('pts1').innerHTML='';
+    document.getElementById('pts2').innerHTML='';
+  }
+
+  /* ── Teclado ── */
+  ['dado1','dado2'].forEach(id=>{
+    document.getElementById(id).addEventListener('keydown',e=>{
+      if(e.key==='Enter'||e.key===' ') rolar();
+    });
+  });
+
+  desenharFace(1,'bg1','pts1');
+</script>
+</body>
+</html>
